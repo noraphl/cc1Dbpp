@@ -1,5 +1,6 @@
 #Class constrained Bin Packing Problem Instance Generator
-#A simplified version based on BPPGen by Petra Schwerin (1997)
+#A modified version for the class constrained BPP
+#and simplified from the original BPPGen by Petra Schwerin (1997)
 
 
 #Initialize random seed
@@ -14,8 +15,9 @@ CCBPPG <- function(n, c, wm, wx, q, m) {
         dir <- sprintf("Random_Instances_%s_%s_%s_%s", c, n, c*wm, c*wx)
         dir.create(dir)
         for (i in c(1:m)) {
-                k <- sample(c(1:q), 1) #maybe can be reduced
-                x <- cbppgen(n, c, wm, wx, k)
+                #how many colors are available for assignment to each element
+                q1 <- sample(c((ceiling((100*n/(2*c))*q)):q), 1) 
+                x <- cbppgen(n, c, wm, wx, q1)
                 filepath <- file.path(dir, sprintf("Random_Instance_%s_%s.bpp", 
                                                                      c, i))
                 write.table(x, file = filepath, quote = F, row.names = F, col.names = F)
@@ -24,15 +26,17 @@ CCBPPG <- function(n, c, wm, wx, q, m) {
 
 
 #Instance Generator
-cbppgen <- function(n, c, wm, wx, k) {
+cbppgen <- function(n, c, wm, wx, q) {
         v <- list()
         if (wm <= 0 || wm >= wx || wx >= 1) return()
         for (i in c(1:n)) {
                 z <- rnorm(n = 1, mean = 0, sd = 1/3)
                 wi <- abs(ceiling(wm+(wx-wm)*z+c*z))
                 if (wi > c) wi = c
-                ki <- sample(c(1:k), 1)
+                ki <- sample(c(1:q), 1)
                 v[[i]] <- c(wi,ki)
+                #maximum number of colors allowed in each bin
+                k <- ceiling(q/((wx-wm)*c/1000)) 
         }
         inst <- cbind(c(n,c,k), "")
         inst <- rbind(inst, matrix(unlist(v), ncol = 2, byrow = T))
